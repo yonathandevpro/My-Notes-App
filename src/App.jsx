@@ -10,7 +10,6 @@ export default function App() {
     const [notes, setNotes] = React.useState([]);
     const [currentNoteId, setCurrentNoteId] = React.useState("");
     
-    console.log(currentNoteId);
     const currentNote = 
         notes.find(note => note.id === currentNoteId) 
         || notes[0]
@@ -35,9 +34,27 @@ export default function App() {
         }
     }, [notes]);
 
+    // function currentTimeDayStamp (current) {
+    //     const currentDate = new Date(current);
+
+    //     // Get various components of the date
+    //     const year = currentDate.getFullYear();
+    //     const month = currentDate.getMonth() + 1; // Month is zero-based, so add 1
+    //     const day = currentDate.getDate();
+    //     const hours = currentDate.getHours();
+    //     const minutes = currentDate.getMinutes();
+    //     const seconds = currentDate.getSeconds();
+
+    //     // Create a formatted date string
+    //     const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    //     return current// Output: formatted date string
+    // }
+
     async function createNewNote() {
         const newNote = {
-            body: "# Type your markdown note's title here"
+            body: "# Type your markdown note's title here",
+            createdAt: Date.now(),
+            updatedAt: Date.now()
         }
 
         const newNoteRef = await addDoc(notesCollection, newNote);
@@ -46,13 +63,21 @@ export default function App() {
 
     async function updateNote(text) {
         const docRef = doc(db, "notes", currentNoteId);
-        await setDoc(docRef, { body: text }, { merge: true } );
+        await setDoc(docRef, { body: text, updatedAt: Date.now() }, { merge: true } );
     }
 
     async function deleteNote(noteId) {
         const docRef = doc(db, "notes", noteId);
         await deleteDoc(docRef);
     }
+
+   
+     let sortedNotes = notes.sort(( a, b ) => {
+        return b.updatedAt - a.updatedAt
+     });
+
+     
+    
 
     return (
         <main>
@@ -65,7 +90,7 @@ export default function App() {
                         className="split"
                     >
                         <Sidebar
-                            notes={notes}
+                            notes={sortedNotes}
                             currentNote={currentNote}
                             setCurrentNoteId={setCurrentNoteId}
                             newNote={createNewNote}
