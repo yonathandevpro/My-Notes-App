@@ -3,7 +3,7 @@ import Sidebar from "../components/Sidebar.jsx";
 import Editor from "../components/Editor.jsx"
 import Split from "react-split"
 import { nanoid } from "nanoid"
-import { onSnapshot } from "firebase/firestore";
+import { onSnapshot, addDoc } from "firebase/firestore";
 import { notesCollection } from "../firebase.js";
 
 export default function App() {
@@ -30,12 +30,13 @@ export default function App() {
         return unsubscribe;
     }, [])
 
-    function createNewNote() {
+    async function createNewNote() {
         const newNote = {
             body: "# Type your markdown note's title here"
         }
-        addDoc()
-        setCurrentNoteId(newNote.id)
+
+        const newNoteRef = await addDoc(notesCollection, newNote);
+        setCurrentNoteId(newNoteRef.id)
     }
 
     function updateNote(text) {
@@ -54,8 +55,7 @@ export default function App() {
         })
     }
 
-    function deleteNote(event, noteId) {
-        event.stopPropagation()
+    function deleteNote(noteId) {
         setNotes(oldNotes => oldNotes.filter(note => note.id !== noteId))
     }
 
@@ -76,14 +76,15 @@ export default function App() {
                             newNote={createNewNote}
                             deleteNote={deleteNote}
                         />
-                        {
-                            currentNoteId &&
-                            notes.length > 0 &&
-                            <Editor
-                                currentNote={currentNote}
-                                updateNote={updateNote}
-                            />
+                       {
+                            currentNoteId && notes.length > 0 ? (
+                                <Editor
+                                    currentNote={currentNote}
+                                    updateNote={updateNote}
+                                />
+                            ) : null
                         }
+
                     </Split>
                     :
                     <div className="no-notes">
