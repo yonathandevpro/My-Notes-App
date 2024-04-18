@@ -3,15 +3,14 @@ import Sidebar from "../components/Sidebar.jsx";
 import Editor from "../components/Editor.jsx"
 import Split from "react-split"
 import { nanoid } from "nanoid"
-import { onSnapshot, addDoc, doc, deleteDoc } from "firebase/firestore";
+import { onSnapshot, addDoc, doc, deleteDoc, setDoc } from "firebase/firestore";
 import { notesCollection, db } from "../firebase.js";
 
 export default function App() {
     const [notes, setNotes] = React.useState([]);
-    const [currentNoteId, setCurrentNoteId] = React.useState(
-        (notes[0]?.id) || ""
-    )
+    const [currentNoteId, setCurrentNoteId] = React.useState("");
     
+    console.log(currentNoteId);
     const currentNote = 
         notes.find(note => note.id === currentNoteId) 
         || notes[0]
@@ -30,6 +29,12 @@ export default function App() {
         return unsubscribe;
     }, [])
 
+    React.useEffect(() => {
+        if (!currentNoteId) {
+            setCurrentNoteId(notes[0]?.id)
+        }
+    }, [notes]);
+
     async function createNewNote() {
         const newNote = {
             body: "# Type your markdown note's title here"
@@ -39,20 +44,9 @@ export default function App() {
         setCurrentNoteId(newNoteRef.id)
     }
 
-    function updateNote(text) {
-        setNotes(oldNotes => {
-            const newArray = []
-            for (let i = 0; i < oldNotes.length; i++) {
-                const oldNote = oldNotes[i]
-                if (oldNote.id === currentNoteId) {
-                    // Put the most recently-modified note at the top
-                    newArray.unshift({ ...oldNote, body: text })
-                } else {
-                    newArray.push(oldNote)
-                }
-            }
-            return newArray
-        })
+    async function updateNote(text) {
+        const docRef = doc(db, "notes", currentNoteId);
+        await setDoc(docRef, { body: text }, { merge: true } );
     }
 
     async function deleteNote(noteId) {
