@@ -3,8 +3,8 @@ import Sidebar from "../components/Sidebar.jsx";
 import Editor from "../components/Editor.jsx"
 import Split from "react-split"
 import { nanoid } from "nanoid"
-import { onSnapshot, addDoc } from "firebase/firestore";
-import { notesCollection } from "../firebase.js";
+import { onSnapshot, addDoc, doc, deleteDoc } from "firebase/firestore";
+import { notesCollection, db } from "../firebase.js";
 
 export default function App() {
     const [notes, setNotes] = React.useState([]);
@@ -55,8 +55,9 @@ export default function App() {
         })
     }
 
-    function deleteNote(noteId) {
-        setNotes(oldNotes => oldNotes.filter(note => note.id !== noteId))
+    async function deleteNote(noteId) {
+        const docRef = doc(db, "notes", noteId);
+        await deleteDoc(docRef);
     }
 
     return (
